@@ -18,8 +18,8 @@
  <date>2011-09-15</date>
  <time>12:00:00</time>
  <version>
-  <release>1.0.3</release>
-  <api>1.0.0</api>
+  <release>2.0.0</release>
+  <api>2.0.0</api>
  </version>
  <stability>
   <release>stable</release>

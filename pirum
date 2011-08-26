@@ -28,11 +28,6 @@ class Pirum_CLI
 
     protected $options;
     protected $formatter;
-    protected $commands = array(
-        'build',
-        'add',
-        'remove',
-    );
 
     public function __construct(array $options)
     {
@@ -42,53 +37,23 @@ class Pirum_CLI
 
     public function run()
     {
-        echo $this->getUsage();
+        echo $this->formatter->format('Pirum', 'INFO').sprintf(" %s by Fabien Potencier\n\n", self::version());
 
-        if (!isset($this->options[1])) {
-            return 0;
-        }
-
-        $command = $this->options[1];
-        if (!$this->isCommand($command)) {
-            echo $this->formatter->formatSection('ERROR', sprintf('"%s" is not a valid command.', $command));
+        if (!isset($this->options[1]) || !is_dir($this->options[1])) {
+            echo $this->formatter->formatSection('ERROR', "Give the root directory of the PEAR channel server to build.");
 
             return 1;
         }
 
-        echo $this->formatter->format(sprintf("Running the %s command:\n", $command), 'COMMENT');
-
-        if (!isset($this->options[2]) || !is_dir($this->options[2])) {
-            echo $this->formatter->formatSection('ERROR', "You must give the root directory of the PEAR channel server.");
-
-            return 1;
-        }
-
-        $target = $this->options[2];
-
-        $ret = 0;
         try {
-            switch ($command) {
-                case 'build':
-                    $this->runBuild($target);
-                    break;
-                case 'add':
-                    $ret = $this->runAdd($target);
-                    break;
-                case 'remove':
-                    $ret = $this->runRemove($target);
-                    break;
-            }
-
-            if (0 == $ret) {
-                echo $this->formatter->formatSection('INFO', sprintf("Command %s run successfully.", $command));
-            }
+            $this->runBuild($this->options[1]);
         } catch (Exception $e) {
             echo $this->formatter->formatSection('ERROR', sprintf("%s (%s, %s)", $e->getMessage(), get_class($e), $e->getCode()));
 
             return 1;
         }
 
-        return $ret;
+        return 0;
     }
 
     public static function removeDir($target)
@@ -118,80 +83,10 @@ class Pirum_CLI
         }
     }
 
-    protected function runRemove($target)
-    {
-        if (!isset($this->options[3])) {
-            echo $this->formatter->formatSection('ERROR', "You must pass a PEAR package name.");
-
-            return 1;
-        }
-
-        if (!preg_match(Pirum_Package::PACKAGE_FILE_PATTERN, $this->options[3])) {
-            echo $this->formatter->formatSection('ERROR', sprintf('The PEAR package "%s" filename is badly formatted.', $this->options[3]));
-
-            return 1;
-        }
-
-        if (!is_file($target.'/get/'.basename($this->options[3]))) {
-            echo $this->formatter->formatSection('ERROR', sprintf('The PEAR package "%s" does not exist in this channel.', $this->options[3]));
-
-            return 1;
-        }
-
-        unlink($target.'/get/'.basename($this->options[3]));
-        unlink($target.'/get/'.substr_replace(basename($this->options[3]), '.tar', -4));
-
-        $this->runBuild($target);
-    }
-
-    protected function runAdd($target)
-    {
-        if (!isset($this->options[3])) {
-            echo $this->formatter->formatSection('ERROR', "You must pass a PEAR package file path.");
-
-            return 1;
-        }
-
-        if (!is_file($this->options[3])) {
-            echo $this->formatter->formatSection('ERROR', sprintf('The PEAR package "%s" does not exist.', $this->options[3]));
-
-            return 1;
-        }
-
-        if (!preg_match(Pirum_Package::PACKAGE_FILE_PATTERN, $this->options[3])) {
-            echo $this->formatter->formatSection('ERROR', sprintf('The PEAR package "%s" filename is badly formatted.', $this->options[3]));
-
-            return 1;
-        }
-
-        if (!is_dir($target.'/get')) {
-            mkdir($target.'/get', 0777, true);
-        }
-
-        copy($this->options[3], $target.'/get/'.basename($this->options[3]));
-
-        $this->runBuild($target);
-
-        $package = $this->options[3];
-    }
-
     protected function runBuild($target)
     {
         $builder = new Pirum_Builder($target, $this->formatter);
         $builder->build();
-    }
-
-    protected function isCommand($cmd) {
-        return in_array($cmd, $this->commands);
-    }
-
-    protected function getUsage()
-    {
-        return $this->formatter->format(sprintf("Pirum %s by Fabien Potencier\n", self::version()), 'INFO') .
-               $this->formatter->format("Available commands:\n", 'COMMENT') .
-               "  pirum build target_dir\n" .
-               "  pirum add target_dir Pirum-1.0.0.tgz\n" .
-               "  pirum remove target_dir Pirum-1.0.0.tgz\n\n";
     }
 }
 
@@ -274,24 +169,33 @@ class Pirum_Builder
 
     protected function fixArchives()
     {
-        // create tar files when missing
         foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->targetDir.'/get'), RecursiveIteratorIterator::LEAVES_ONLY) as $file) {
-            if (!preg_match(Pirum_Package::PACKAGE_FILE_PATTERN, $file->getFileName(), $match)) {
+            $pattern = preg_replace('/\.tgz/', '.(tgz|tar)', Pirum_Package::PACKAGE_FILE_PATTERN);
+            if (!preg_match($pattern, $file->getFileName(), $match)) {
                 continue;
             }
 
-            $tar = preg_replace('/\.tgz/', '.tar', $file);
-            if (!file_exists($tar)) {
-                if (function_exists('gzopen')) {
-                    $gz = gzopen($file, 'r');
-                    $fp = fopen(str_replace('.tgz', '.tar', $file), 'wb');
-                    while (!gzeof($gz)) {
-                        fwrite($fp, gzread($gz, 10000));
+            if (preg_match('/\.tgz$/', $file)) {
+                $tar = preg_replace('/\.tgz$/', '.tar', $file);
+                if (!file_exists($tar)) {
+                    // create the missing tar file
+                    if (function_exists('gzopen')) {
+                        $gz = gzopen($file, 'r');
+                        $fp = fopen(str_replace('.tgz', '.tar', $file), 'wb');
+                        while (!gzeof($gz)) {
+                            fwrite($fp, gzread($gz, 10000));
+                        }
+                        gzclose($gz);
+                        fclose($fp);
+                    } else {
+                        system('cd '.$target.'/get/ && gunzip -c -f '.basename($file));
                     }
-                    gzclose($gz);
-                    fclose($fp);
-                } else {
-                    system('cd '.$target.'/get/ && gunzip -c -f '.basename($file));
+                }
+            } elseif (preg_match('/\.tar$/', $file)) {
+                $tgz = preg_replace('/\.tar$/', '.tgz', $file);
+                if (!file_exists($tgz)) {
+                    // removing tar the file as the main tgz file does not exist anymore
+                    unlink($file);
                 }
             }
         }
@@ -1403,6 +1307,6 @@ class Pirum_CLI_Formatter
         $section = " $section ".str_repeat(' ', max(0, 5 - strlen($section)));
         $style .= '_SECTION';
 
-        return sprintf("  %s %s\n", $this->format($section, $style), $text);
+        return sprintf("%s %s\n", $this->format($section, $style), $text);
     }
 }
