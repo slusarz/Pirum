@@ -1583,19 +1583,21 @@ class Pirum_Package
         $array = array();
         foreach ($xml->children() as $element => $value) {
             $key = (string) $element;
-            $value = $this->XMLToArray($value);
+            if (!($val = $this->XMLToArray($value))) {
+                $val = (string) $value;
+            }
 
             if (isset($array[$key])) {
                 if (!is_array($array[$key])) {
                     $array[$key] = array($array[$key]);
                 }
-                $array[$key][] = $value;
+                $array[$key][] = $val;
             } else {
-                $array[$key] = $value;
+                $array[$key] = $val;
             }
         }
 
-        return $array ?: (string) $value;
+        return $array;
     }
 
     protected function XMLGroupDepsToArray($xml)
