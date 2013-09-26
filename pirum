@@ -1379,15 +1379,13 @@ class Pirum_Package
 
         $this->name    = $match['name'];
         $this->version = $match['version'];
-
-        $this->tmpDir = sys_get_temp_dir().'/pirum_package_'.uniqid();
-
-        mkdir($this->tmpDir, 0777, true);
     }
 
     public function __destruct()
     {
-        Pirum_CLI::removeDir($this->tmpDir);
+        if ($this->tmpDir) {
+            Pirum_CLI::removeDir($this->tmpDir);
+        }
     }
 
     public function getPackageXml()
@@ -1523,6 +1521,11 @@ class Pirum_Package
 
     public function loadPackageFromArchive()
     {
+        if (!$this->tmpDir) {
+            $this->tmpDir = sys_get_temp_dir().'/pirum_package_'.uniqid();
+            mkdir($this->tmpDir, 0777, true);
+        }
+
         if (!function_exists('gzopen')) {
             copy($this->archive, $this->tmpDir.'/archive.tgz');
             system('cd '.$this->tmpDir.' && tar zxpf archive.tgz');
