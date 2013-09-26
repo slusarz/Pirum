@@ -1383,7 +1383,7 @@ class Pirum_Package
 
     public function __destruct()
     {
-        if ($this->tmpDir) {
+        if (isset($this->tmpDir)) {
             Pirum_CLI::removeDir($this->tmpDir);
         }
     }
@@ -1521,7 +1521,7 @@ class Pirum_Package
 
     public function loadPackageFromArchive()
     {
-        if (!$this->tmpDir) {
+        if (!isset($this->tmpDir)) {
             $this->tmpDir = sys_get_temp_dir().'/pirum_package_'.uniqid();
             mkdir($this->tmpDir, 0777, true);
         }
