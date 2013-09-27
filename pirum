@@ -573,7 +573,7 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
                         <?php if ($deps): ?>
                             <tr><th>Dependencies</th><td>
                                 <?php for ($i = 0, $count = count($deps); $i < $count; $i++): ?>
-                                    <?php if (isset($deps[$i])) { echo $deps[$i]['channel'].'/'.$deps[$i]['name'].($i < $count - 1 ? ', ' : '') } ?>
+                                    <?php if (isset($deps[$i])) { echo $deps[$i]['channel'].'/'.$deps[$i]['name'].($i < $count - 1 ? ', ' : ''); } ?>
                                 <?php endfor; ?>
                             </td></tr>
                         <?php endif; ?>
