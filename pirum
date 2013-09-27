@@ -641,16 +641,19 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
             $repository[$packageDef['name']] = $packageDef;
 
             $pearChannels = array();
+            // standard version fields
+            $version_template = array(
+                'name'        => $packageDef['name'],
+                'description' => $packageDef['description'],
+                'dist'        => array(
+                    'type' => 'pear'
+                )
+            );
+
             foreach ($package as $release) {
-                // standard version fields
-                $version = array(
-                    'name'        => $packageDef['name'],
-                    'description' => $packageDef['description'],
-                    'dist'        => array(
-                        'type' => 'pear',
-                        'url'  => $this->server->url.'/get/'.$name.'-'.$release->getVersion().'.tgz',
-                    ),
-                );
+                $version = $version_template;
+                $version_template['dist']['url'] = $this->server->url.'/get/'.$name.'-'.$release->getVersion().'.tgz';
+
                 if ($license = $release->getLicense(true)) {
                     $version['license'] = $license;
                 }
