@@ -385,6 +385,8 @@ class Pirum_Builder
                 $maintainers = $release->getMaintainers();
                 $maintainer = reset($maintainers);
 
+                $notes = htmlspecialchars($release->getNotes());
+
                 $entries .= <<<EOF
     <entry>
         <title>{$name} {$release->getVersion(true)} ({$release->getStability()})</title>
@@ -395,7 +397,7 @@ class Pirum_Builder
         </author>
         <updated>$date</updated>
         <content>
-            {$release->getNotes()}
+            $notes
         </content>
     </entry>
 EOF;
@@ -897,6 +899,8 @@ EOF
         $maintainers = $release->getMaintainers();
         $maintainer = reset($maintainers);
 
+        $notes = htmlspecialchars($release->getNotes());
+
         file_put_contents($dir.'/'.$release->getVersion().'.xml', <<<EOF
 <?xml version="1.0" encoding="UTF-8" ?>
 <r xmlns="http://pear.php.net/dtd/rest.release" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://pear.php.net/dtd/rest.release http://pear.php.net/dtd/rest.release.xsd">
@@ -909,7 +913,7 @@ EOF
     <s>{$release->getSummary(true)}</s>
     <d>{$release->getDescription(true)}</d>
     <da>{$release->getDate()}</da>
-    <n>{$release->getNotes()}</n>
+    <n>$notes</n>
     <f>{$release->getFileSize()}</f>
     <g>{$this->server->url}/get/{$name}-{$release->getVersion()}</g>
     <x xlink:href="package.{$release->getVersion()}.xml"/>
@@ -931,7 +935,7 @@ EOF
     <s>{$release->getSummary(true)}</s>
     <d>{$release->getDescription(true)}</d>
     <da>{$release->getDate()}</da>
-    <n>{$release->getNotes()}</n>
+    <n>$notes</n>
     <f>{$release->getFileSize()}</f>
     <g>{$this->server->url}/get/{$name}-{$release->getVersion()}</g>
     <x xlink:href="package.{$release->getVersion()}.xml"/>
