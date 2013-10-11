@@ -739,7 +739,7 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
 
                 // autoload
                 $version['autoload'] = array(
-                    'classmap' => $release->getClassMap()
+                    'classmap' => array_values($release->getClassMap())
                 );
 
                 $repository[$packageDef['name']]['versions'][$version['version']] = $version;
