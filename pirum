@@ -1596,28 +1596,6 @@ class Pirum_Package
         throw new InvalidArgumentException('The PEAR package does not have a package.xml file.');
     }
 
-    protected function XMLToArray($xml)
-    {
-        $array = array();
-        foreach ($xml->children() as $element => $value) {
-            $key = (string) $element;
-            if (!($val = $this->XMLToArray($value))) {
-                $val = (string) $value;
-            }
-
-            if (isset($array[$key])) {
-                if (!is_array($array[$key])) {
-                    $array[$key] = array($array[$key]);
-                }
-                $array[$key][] = $val;
-            } else {
-                $array[$key] = $val;
-            }
-        }
-
-        return $array;
-    }
-
     protected function XMLGroupDepsToArray($xml)
     {
         $deps = array();
@@ -1630,7 +1608,10 @@ class Pirum_Package
 
             // Create one group dependency per childern
             foreach ($group->children() as $type => $value) {
-                $deps[] = array('attribs' => $attribs, $type => $this->XMLToArray($value));
+                $deps[] = array(
+                    'attribs' => $attribs,
+                    $type => json_decode(json_encode((array)$value), 1)
+                );
             }
         }
 
@@ -1707,7 +1688,7 @@ class Pirum_Package
 
     protected function buildDeps(SimpleXMLElement $package)
     {
-        $deps = $this->XMLToArray($package->dependencies);
+        $deps = json_decode(json_encode((array)$package->dependencies), 1);
         if (isset($package->dependencies->group) &&
             $group = $this->XMLGroupDepsToArray($package->dependencies->group)) {
             $deps['group'] = $group;
