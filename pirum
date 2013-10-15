@@ -613,8 +613,9 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
 
     protected function buildComposerRepository()
     {
-        $this->formatter and print $this->formatter->formatSection('INFO', "Building composer repository.");
+        $this->formatter and print $this->formatter->formatSection('INFO', "Building composer repository", false);
 
+        $first = true;
         $pearChannels = $repository = array();
 
         $vendor = !empty($this->server->alias) ? $this->server->alias : $this->server->name;
@@ -652,6 +653,10 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
             );
 
             foreach ($package as $release) {
+                !$first and $this->formatter and print $this->formatter->format(',');
+                $this->formatter and print $this->formatter->format(' ' . $name . ' ' . $release->getVersion());
+                $first = false;
+
                 $version = $version_template;
                 $version['dist']['url'] = $this->server->url.'/get/'.$name.'-'.$release->getVersion().'.tgz';
 
@@ -701,6 +706,7 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
                                         if (false === strpos($dataKey, '/')) {
                                             $channelUrl = 'http://'.$value['channel'];
                                             if (!isset($pearChannels[$channelUrl])) {
+                                                $this->formatter and print $this->formatter->format(' [Loading PEAR channel ' . $channelUrl . ']');
                                                 try {
                                                     $channelInfo = @new SimpleXMLElement($channelUrl.'/channel.xml', null, true);
                                                 } catch (Exception $e) {
@@ -750,6 +756,8 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
         } else {
             file_put_contents($this->buildDir.'/packages.json',json_encode($repository));
         }
+
+        $this->formatter and print "\n";
     }
 
     protected function createComposerConstraint(array $data)
