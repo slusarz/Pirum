@@ -615,7 +615,7 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
     {
         $this->formatter and print $this->formatter->formatSection('INFO', "Building composer repository.");
 
-        $repository = array();
+        $pearChannels = $repository = array();
 
         $vendor = !empty($this->server->alias) ? $this->server->alias : $this->server->name;
 
@@ -642,7 +642,6 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
             }
             $repository[$packageDef['name']] = $packageDef;
 
-            $pearChannels = array();
             // standard version fields
             $version_template = array(
                 'name'        => $packageDef['name'],
