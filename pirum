@@ -1280,7 +1280,7 @@ EOF;
 
         /* SORT_NATURAL is defined as of PHP 5.4.0. Fallback to SORT_REGULAR
          * otherwise. */
-        ksort($this->packages, constant('SORT_NATURAL'));
+        ksort($this->packages, @constant('SORT_NATURAL'));
     }
 
     protected function mirrorDir($build, $target)
