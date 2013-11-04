@@ -587,14 +587,16 @@ pear install <?php echo $this->server->alias ?>/package_name-beta</code></pre>
                             $maintainers = implode(', ', $maintainers);
                         ?>
                         <tr><th>Maintainers</th><td><?php echo $maintainers ?></td></tr>
+                        <tr><th>Releases</th><td>
                         <?php
-                        $releases = array();
                         foreach ($package as $release) {
-                            $releases[] = "<a href=\"{$this->server->url}/get/{$name}-{$release->getVersion(true)}.tgz\">{$release->getVersion(true)}</a> <small>({$release->getStability()})</small>";
+                            echo '<div>' .
+                                "<a href=\"{$this->server->url}/get/{$name}-{$release->getVersion(true)}.tgz\">{$release->getVersion(true)}</a> <small>({$release->getStability()})</small>" .
+                                '<pre>' . htmlspecialchars(trim($release->getNotes())) . '</pre>' .
+                                '</div>';
                         }
-                        $releases = implode(', ', $releases);
                         ?>
-                        <tr><th>Releases</th><td><?php echo $releases ?></td></tr>
+                        </td></tr>
                     </table>
                 <?php endforeach; ?>
             </div>
